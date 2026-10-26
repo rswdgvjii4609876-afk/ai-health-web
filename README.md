@@ -5,10 +5,10 @@
 ## 当前可体验
 
 - 切换三类独立演示画像，查看各自的七日示例数据。
-- 填写每日睡眠、活动、心情与简短备注，数据写入 H2。
-- 使用 ECharts 查看变化趋势，并在表格中核对具体记录。
-- 浏览人工整理的健康知识摘要，打开原始来源，加入小行动并标记完成。
-- 使用独立助手进行基础问答演示：关键词匹配已有资料、展示引用出处；资料范围外明确拒答。它是 `AiService` 的 Mock 实现，**未接入真实大模型，也不是 RAG**。
+- 填写睡眠、活动、心情与简短备注，修正最近七天的任意一天，数据写入 H2。
+- 查看可解释的七日回顾、切换 ECharts 指标、核对原始记录，并导出示例 JSON。
+- 搜索和筛选人工整理的健康知识，打开原始出处；创建、完成或移除小行动。
+- 从首页直接提问，在独立助手中追问、核对回答依据和是否使用了今日记录。Mock 按关键词匹配并排序最多两条资料；资料范围外明确拒答。**未接入真实大模型，也不是 RAG**。
 
 三类画像均为虚构示例，彼此数据隔离，但**没有用户登录与鉴权**。请勿输入真实病历、身份信息或其他敏感数据。H2 为内存数据库，后端停止后记录重置。
 
@@ -57,18 +57,20 @@ cd backend
 .\mvnw.cmd verify
 ```
 
-后端测试覆盖数据库启动、三类画像数据、Mock 引用、范围外拒答、每日记录、行动勾选和输入校验。
+后端测试覆盖数据库启动、三类画像数据、七日回顾、多来源 Mock 引用与拒答、最近七天的记录编辑、行动完成与移除，以及输入校验。
 
 ## API 与配置
 
 | 方法 | 路径 | 用途 |
 | --- | --- | --- |
 | GET | `/api/health` | 服务与 AI 模式状态 |
-| GET | `/api/dashboard?persona=STUDENT` | 概览、历史、行动、知识 |
+| GET | `/api/dashboard?persona=STUDENT` | 概览、七日回顾、历史、行动、知识 |
 | PUT | `/api/checkins/today?persona=STUDENT` | 保存今日记录 |
+| PUT | `/api/checkins/{yyyy-MM-dd}?persona=STUDENT` | 保存最近七天的指定日期 |
 | POST | `/api/assistant` | Mock 基础问答 |
 | POST | `/api/actions` | 添加小行动 |
 | PATCH | `/api/actions/{id}` | 更新完成状态 |
+| DELETE | `/api/actions/{id}` | 移除小行动 |
 
 画像枚举：`STUDENT`、`WORKER`、`SENIOR`。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆盖数据库连接。`.env.example` 是变量清单，Spring Boot 不会自动载入 `.env`。H2 控制台默认关闭。切换 MySQL 时还需增加驱动并检查 schema 兼容性。
 

@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -31,13 +32,18 @@ class DemoApiTests {
 		mvc.perform(get("/api/dashboard").param("persona", "STUDENT"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.history.length()").value(7))
-				.andExpect(jsonPath("$.knowledge[0].id").value("sleep"));
+				.andExpect(jsonPath("$.currentDay").isNotEmpty())
+				.andExpect(jsonPath("$.knowledge[0].id").value("sleep"))
+				.andExpect(jsonPath("$.review.daysRecorded").value(7))
+				.andExpect(jsonPath("$.review.focusId").value("sleep"));
 
 		mvc.perform(post("/api/assistant").contentType(MediaType.APPLICATION_JSON)
 				.content("{\"persona\":\"STUDENT\",\"question\":\"睡眠怎么安排\"}"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.mock").value(true))
 				.andExpect(jsonPath("$.sources[0].id").value("sleep"))
+				.andExpect(jsonPath("$.followUps.length()").value(2))
+				.andExpect(jsonPath("$.usedTodayRecord").value(true))
 				.andExpect(jsonPath("$.suggestedAction").isNotEmpty());
 	}
 
@@ -66,6 +72,10 @@ class DemoApiTests {
 				.contentType(MediaType.APPLICATION_JSON).content("{\"completed\":true}"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.completed").value(true));
+		mvc.perform(delete("/api/actions/" + action.get("id").asText()))
+				.andExpect(status().isOk());
+		mvc.perform(delete("/api/actions/" + action.get("id").asText()))
+				.andExpect(status().isNotFound());
 	}
 
 	@Test
@@ -82,6 +92,35 @@ class DemoApiTests {
 				.content("{\"persona\":\"STUDENT\",\"question\":\"天气怎么样\"}"))
 				.andExpect(status().isOk())
 				.andExpect(jsonPath("$.sources.length()").value(0))
+				.andExpect(jsonPath("$.usedTodayRecord").value(false))
 				.andExpect(jsonPath("$.suggestedAction").isEmpty());
+	}
+
+	@Test
+	void combinedQuestionReturnsTwoDistinctSources() throws Exception {
+		mvc.perform(post("/api/assistant").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"persona\":\"STUDENT\",\"question\":\"睡眠和活动怎么安排\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.sources.length()").value(2))
+				.andExpect(jsonPath("$.sources[0].id").value("sleep"))
+				.andExpect(jsonPath("$.sources[1].id").value("activity"));
+	}
+
+	@Test
+	void recentDayCanBeEditedButOlderDaysCannot() throws Exception {
+		String response = mvc.perform(get("/api/dashboard").param("persona", "SENIOR"))
+				.andReturn().getResponse().getContentAsString();
+		String day = mapper.readTree(response).get("history").get(0).get("day").asText();
+		mvc.perform(put("/api/checkins/" + day).param("persona", "SENIOR")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"sleepHours\":7.8,\"activityMinutes\":39,\"mood\":4,\"note\":\"revised\"}"))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.sleepHours").value(7.8));
+		mvc.perform(get("/api/dashboard").param("persona", "SENIOR"))
+				.andExpect(jsonPath("$.history[0].sleepHours").value(7.8));
+		mvc.perform(put("/api/checkins/2000-01-01").param("persona", "SENIOR")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"sleepHours\":7.8,\"activityMinutes\":39,\"mood\":4}"))
+				.andExpect(status().isBadRequest());
 	}
 }

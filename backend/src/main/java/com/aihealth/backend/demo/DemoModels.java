@@ -30,8 +30,12 @@ public final class DemoModels {
 			String sourceName, String sourceDate, String sourceUrl, String action) {
 	}
 
-	public record Dashboard(Persona persona, Checkin today, List<Checkin> history,
-			List<ActionItem> actions, List<KnowledgeItem> knowledge) {
+	public record Dashboard(Persona persona, LocalDate currentDay, Checkin today, List<Checkin> history,
+			List<ActionItem> actions, List<KnowledgeItem> knowledge, WeeklyReview review) {
+	}
+
+	public record WeeklyReview(int daysRecorded, double averageSleepHours, int averageActivityMinutes,
+			double sleepChangeHours, int activityChangeMinutes, String focusId, String observation) {
 	}
 
 	public record AskInput(Persona persona, String question) {

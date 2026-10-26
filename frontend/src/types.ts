@@ -1,6 +1,6 @@
 export type Persona = "STUDENT" | "WORKER" | "SENIOR";
 
-export type View = "today" | "checkin" | "trends" | "knowledge" | "assistant";
+export type View = "today" | "checkin" | "review" | "knowledge" | "assistant";
 
 export interface Checkin {
   day: string;
@@ -36,15 +36,35 @@ export interface KnowledgeItem {
 
 export interface Dashboard {
   persona: Persona;
+  currentDay: string;
   today: Checkin | null;
   history: Checkin[];
   actions: ActionItem[];
   knowledge: KnowledgeItem[];
+  review: WeeklyReview;
+}
+
+export interface WeeklyReview {
+  daysRecorded: number;
+  averageSleepHours: number;
+  averageActivityMinutes: number;
+  sleepChangeHours: number;
+  activityChangeMinutes: number;
+  focusId: string;
+  observation: string;
 }
 
 export interface AiResponse {
   content: string;
   sources: KnowledgeItem[];
   suggestedAction: string | null;
+  followUps: string[];
+  usedTodayRecord: boolean;
   mock: boolean;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  text: string;
+  response?: AiResponse;
 }

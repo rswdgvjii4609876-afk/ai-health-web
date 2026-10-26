@@ -19,12 +19,21 @@ export const api = {
         params: { persona },
       })
     ).data,
+  checkinDay: async (persona: Persona, day: string, input: CheckinInput) =>
+    (
+      await client.put<Checkin>(`/checkins/${day}`, input, {
+        params: { persona },
+      })
+    ).data,
   ask: async (persona: Persona, question: string) =>
     (await client.post<AiResponse>("/assistant", { persona, question })).data,
   addAction: async (persona: Persona, title: string) =>
     (await client.post<ActionItem>("/actions", { persona, title })).data,
   updateAction: async (id: string, completed: boolean) =>
     (await client.patch<ActionItem>(`/actions/${id}`, { completed })).data,
+  deleteAction: async (id: string) => {
+    await client.delete(`/actions/${id}`);
+  },
 };
 
 export function apiError(error: unknown): string {

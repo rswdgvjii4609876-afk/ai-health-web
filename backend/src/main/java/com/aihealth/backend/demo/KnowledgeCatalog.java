@@ -2,6 +2,7 @@ package com.aihealth.backend.demo;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -36,6 +37,13 @@ public class KnowledgeCatalog {
 					"国家卫生健康委员会", "2024-05", HEALTH_LITERACY_URL, null));
 	private final Map<String, KnowledgeItem> byId = ITEMS.stream()
 			.collect(Collectors.toUnmodifiableMap(KnowledgeItem::id, Function.identity()));
+	private static final Map<String, List<String>> TERMS = Map.of(
+			"sleep", List.of("睡", "熬夜", "作息", "失眠", "休息"),
+			"activity", List.of("久坐", "运动", "活动", "锻炼", "走路"),
+			"mood", List.of("焦虑", "压力", "情绪", "心情", "心理"),
+			"fall", List.of("跌", "摔", "绊", "平衡"),
+			"medicine", List.of("药", "处方", "抗生素"),
+			"literacy", List.of("健康信息", "来源", "科普", "谣言"));
 
 	public KnowledgeItem get(String id) {
 		return byId.get(id);
@@ -50,15 +58,20 @@ public class KnowledgeCatalog {
 		return order.stream().map(this::get).toList();
 	}
 
-	public KnowledgeItem match(String question) {
-		if (containsAny(question, "药", "处方", "抗生素")) return get("medicine");
-		if (containsAny(question, "跌", "摔", "绊", "平衡")) return get("fall");
-		if (containsAny(question, "睡", "熬夜", "作息", "失眠", "休息")) return get("sleep");
-		if (containsAny(question, "坐", "运动", "活动", "锻炼", "走路")) return get("activity");
-		if (containsAny(question, "焦虑", "压力", "情绪", "心情")) return get("mood");
-		if (containsAny(question, "健康信息", "来源", "科普", "谣言")) return get("literacy");
-		return null;
+	public List<KnowledgeItem> search(String question, Persona persona) {
+		if (containsAny(question, "药", "处方", "抗生素")) return List.of(get("medicine"));
+		return forPersona(persona).stream()
+				.filter(item -> TERMS.containsKey(item.id()))
+				.map(item -> new Match(item, (int) TERMS.get(item.id()).stream()
+						.filter(question::contains).count()))
+				.filter(match -> match.score() > 0)
+				.sorted(Comparator.comparingInt(Match::score).reversed())
+				.limit(2)
+				.map(Match::item)
+				.toList();
 	}
+
+	private record Match(KnowledgeItem item, int score) { }
 
 	public static boolean containsAny(String value, String... terms) {
 		for (String term : terms) {

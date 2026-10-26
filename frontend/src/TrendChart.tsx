@@ -30,12 +30,12 @@ export default function TrendChart({
     const config = METRICS[metric];
     chart.setOption({
       animationDuration: 450,
-      grid: { left: 38, right: 18, top: 24, bottom: 34 },
+      grid: { left: 44, right: 18, top: 24, bottom: 40 },
       tooltip: {
         trigger: "axis",
         backgroundColor: "#fff",
         borderColor: "#e1e6e3",
-        textStyle: { color: "#26332e" },
+        textStyle: { color: "#26332e", fontSize: 14 },
         valueFormatter: (value: unknown) => `${value} ${config.unit}`,
       },
       xAxis: {
@@ -44,14 +44,14 @@ export default function TrendChart({
         data: history.map((item) => item.day.slice(5).replace("-", "/")),
         axisLine: { lineStyle: { color: "#cbd6d0" } },
         axisTick: { show: false },
-        axisLabel: { color: "#66736d", fontSize: 12 },
+        axisLabel: { color: "#53675b", fontSize: 14 },
       },
       yAxis: {
         type: "value",
         min: 0,
         max: config.max,
         splitLine: { lineStyle: { color: "#e9eeeb" } },
-        axisLabel: { color: "#66736d", fontSize: 12 },
+        axisLabel: { color: "#53675b", fontSize: 14 },
       },
       series: [
         {

@@ -36,17 +36,20 @@ public class DemoRepository {
 	}
 
 	public Checkin saveCheckin(Persona persona, CheckinInput input) {
-		LocalDate today = LocalDate.now();
+		return saveCheckin(persona, LocalDate.now(), input);
+	}
+
+	public Checkin saveCheckin(Persona persona, LocalDate day, CheckinInput input) {
 		String note = input.note() == null ? "" : input.note().trim();
 		int changed = jdbc.update("UPDATE checkin SET sleep_hours = ?, activity_minutes = ?, mood = ?, note = ? "
 				+ "WHERE persona = ? AND entry_date = ?", input.sleepHours(), input.activityMinutes(), input.mood(),
-				note, persona.name(), Date.valueOf(today));
+				note, persona.name(), Date.valueOf(day));
 		if (changed == 0) {
 			jdbc.update("INSERT INTO checkin (persona, entry_date, sleep_hours, activity_minutes, mood, note) "
-					+ "VALUES (?, ?, ?, ?, ?, ?)", persona.name(), Date.valueOf(today),
+					+ "VALUES (?, ?, ?, ?, ?, ?)", persona.name(), Date.valueOf(day),
 					input.sleepHours(), input.activityMinutes(), input.mood(), note);
 		}
-		return new Checkin(today, input.sleepHours(), input.activityMinutes(), input.mood(), note);
+		return new Checkin(day, input.sleepHours(), input.activityMinutes(), input.mood(), note);
 	}
 
 	public List<ActionItem> actions(Persona persona) {
@@ -67,6 +70,10 @@ public class DemoRepository {
 		if (changed == 0) return null;
 		return jdbc.queryForObject("SELECT id, title, completed FROM action_item WHERE id = ?",
 				(rs, row) -> new ActionItem(rs.getString("id"), rs.getString("title"), rs.getBoolean("completed")), id);
+	}
+
+	public boolean deleteAction(String id) {
+		return jdbc.update("DELETE FROM action_item WHERE id = ?", id) > 0;
 	}
 
 	public boolean hasCheckins(Persona persona) {

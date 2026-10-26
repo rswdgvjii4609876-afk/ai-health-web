@@ -1,0 +1,27 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+
+# Frontend output
+**/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Backend output and local databases
+backend/target/
+*.mv.db
+*.trace.db
+
+# Logs and editor files
+*.log
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db

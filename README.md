@@ -1,55 +1,81 @@
 # 息刻 / AI Health Web
 
-面向大学生、职场人士和老年人的 AI 原生健康素养 Web 应用。本仓库目前仅包含可运行的工程基础；健康建议、RAG 和正式 AI 对话尚未实现。
+面向大学生、职场人士和年长者的 AI 原生健康素养 Web 应用 Demo。当前版本侧重完整的前后端交互与可信来源展示，不提供诊断、治疗方案或正式模型对话。
 
-## 目录
+## 当前可体验
 
-- `frontend/`：React、TypeScript、Vite、Tailwind CSS；已安装 ECharts 和 Axios。
-- `backend/`：Java 21、Spring Boot、Maven Wrapper、Spring Web、JDBC、H2。
-- `docs/`：后续存放技术方案、测试记录和参赛 PDF 的源材料。
-- `AGENTS.md`：协作与代码修改约定。
+- 切换三类独立演示画像，查看各自的七日示例数据。
+- 填写每日睡眠、活动、心情与简短备注，数据写入 H2。
+- 使用 ECharts 查看变化趋势，并在表格中核对具体记录。
+- 浏览人工整理的健康知识摘要，打开原始来源，加入小行动并标记完成。
+- 使用独立助手进行基础问答演示：关键词匹配已有资料、展示引用出处；资料范围外明确拒答。它是 `AiService` 的 Mock 实现，**未接入真实大模型，也不是 RAG**。
 
-## 开发环境
+三类画像均为虚构示例，彼此数据隔离，但**没有用户登录与鉴权**。请勿输入真实病历、身份信息或其他敏感数据。H2 为内存数据库，后端停止后记录重置。
 
-- Node.js 24（Vite 要求 Node.js 20.19+ 或 22.12+）
-- npm 11
-- JDK 21
-- Windows PowerShell 中使用 `npm.cmd`，避免 `npm.ps1` 被执行策略阻止。
-- 不需要全局 Maven，使用 `backend/mvnw.cmd`。
+## 技术栈与目录
 
-## 启动与验证
+| 层 | 技术 | 目录 |
+| --- | --- | --- |
+| 前端 | React、TypeScript、Vite、Tailwind CSS、ECharts、Axios、Lucide | `frontend/` |
+| 后端 | Java 21、Spring Boot 4、Maven Wrapper、REST、JDBC | `backend/` |
+| 数据 | 开发阶段 H2；后续可评估 MySQL | `backend/src/main/resources/` |
+| 文档 | 演示流程、架构与边界 | `docs/` |
 
-前端：
+协作约定见 `AGENTS.md`。
+
+## 本地运行
+
+需 Node.js 24、npm 11、JDK 21。Windows PowerShell 使用 `npm.cmd`，不要修改执行策略。不需要全局 Maven。
+
+终端一：
+
+```powershell
+cd backend
+.\mvnw.cmd spring-boot:run
+```
+
+终端二：
 
 ```powershell
 cd frontend
 npm.cmd ci
 npm.cmd run dev
+```
+
+访问 `http://127.0.0.1:5173/`。Vite 将 `/api` 代理到本机 `8080`。后端默认只监听 `127.0.0.1`；`GET http://127.0.0.1:8080/api/health` 可检查状态。
+
+## 验证
+
+```powershell
+cd frontend
 npm.cmd run lint
 npm.cmd run build
 ```
 
-后端（另开终端）：
-
 ```powershell
 cd backend
-.\mvnw.cmd test
-.\mvnw.cmd package
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd verify
 ```
 
-前端默认访问 `http://localhost:5173/`，后端默认监听 `http://localhost:8080/`。当前尚无业务 REST 端点。首次运行 Maven Wrapper 会下载 Maven 发行包。
+后端测试覆盖数据库启动、三类画像数据、Mock 引用、范围外拒答、每日记录、行动勾选和输入校验。
 
-## 配置
+## API 与配置
 
-开发阶段默认使用内存 H2：`jdbc:h2:mem:aihealth;DB_CLOSE_DELAY=-1`。可用 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 环境变量覆盖连接信息。内存数据库在进程退出后清空。切换 MySQL 时再加入对应驱动并设置环境变量。
+| 方法 | 路径 | 用途 |
+| --- | --- | --- |
+| GET | `/api/health` | 服务与 AI 模式状态 |
+| GET | `/api/dashboard?persona=STUDENT` | 概览、历史、行动、知识 |
+| PUT | `/api/checkins/today?persona=STUDENT` | 保存今日记录 |
+| POST | `/api/assistant` | Mock 基础问答 |
+| POST | `/api/actions` | 添加小行动 |
+| PATCH | `/api/actions/{id}` | 更新完成状态 |
 
-`backend/src/main/java/com/aihealth/backend/ai/` 中定义了 `AiService` 及 Mock 实现。Mock 只返回未接入提示，不提供健康建议。真实模型提供商尚未选定；未来通过环境变量配置密钥，绝不把密钥写入源码或提交 Git。根目录 `.env.example` 仅是变量示例，Spring Boot 不会自动读取 `.env` 文件。
+画像枚举：`STUDENT`、`WORKER`、`SENIOR`。可通过 `DB_URL`、`DB_USERNAME`、`DB_PASSWORD` 覆盖数据库连接。`.env.example` 是变量清单，Spring Boot 不会自动载入 `.env`。H2 控制台默认关闭。切换 MySQL 时还需增加驱动并检查 schema 兼容性。
 
-## 提交材料
+真实模型提供商暂未决定。后续应在 `AiService` 后新增实现，由后端环境变量读取密钥；前端不接触密钥。不要将 API Key、口令或真实健康数据提交 Git。
 
-参赛时需保留 Git 历史，并补充团队信息、部署说明和不超过 30 页的技术 PDF。当前没有部署配置。
+## 参赛材料
 
-## 团队信息
+`docs/demo.md` 记录演示路径、技术结构、资料来源与已知限制。提交前仍需补充团队信息、测试与部署证据，以及不超过 30 页的技术 PDF；当前未部署。
 
-队员、学校与指导教师信息待参赛者提供后填写。
+团队成员、学校、指导教师：待填写。

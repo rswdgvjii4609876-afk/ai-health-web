@@ -1,4 +1,7 @@
 package com.aihealth.backend.ai;
 
-public record AiRequest(String input) {
+import com.aihealth.backend.demo.DemoModels.Checkin;
+import com.aihealth.backend.demo.DemoModels.Persona;
+
+public record AiRequest(Persona persona, String question, Checkin latest) {
 }

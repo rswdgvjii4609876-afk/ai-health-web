@@ -89,7 +89,7 @@ cd backend
 
 模型请求最多要求 384 个输出 token，`AI_DAILY_CALL_LIMIT` 默认限制每个后端进程每 UTC 日尝试 100 次；设为 `0` 可禁止付费请求并回退 Mock。此计数在进程重启后重置，不能代替腾讯云控制台的预算与用量控制。
 
-计划使用腾讯云服务器承载最终作品；**模型供应商尚未确定**。现有兼容适配器可以实验性连接符合 Chat Completions 格式的服务。若后续选择腾讯云 TokenHub，可参考其官方 [API 使用说明](https://cloud.tencent.com/document/product/1823/130078) 和 [语言模型列表](https://cloud.tencent.com/document/product/1823/130079)，按实际开通地域配置接口地址与模型。当前没有真实密钥或服务联调。模型回复必须包含本次资料编号 `[S1]` 等才会展示；这仅验证编号，不验证每句话的医学事实。腾讯云服务器的准备与公开访问前的安全门槛见 `docs/tencent-cloud-deployment.md`。
+已确认可用的腾讯云 Lighthouse 香港三区实例（2 核、2GB、40GB SSD）；操作系统与域名待确认，尚未部署。真实模型联调计划使用腾讯云 TokenHub，现有兼容适配器可连接其 Chat Completions 接口。参考官方 [API 使用说明](https://cloud.tencent.com/document/product/1823/130078) 和 [语言模型列表](https://cloud.tencent.com/document/product/1823/130079)，按实际开通地域配置接口地址与模型。当前没有真实密钥或服务联调。模型回复必须包含本次资料编号 `[S1]` 等才会展示；这仅验证编号，不验证每句话的医学事实。腾讯云服务器的准备与公开访问前的安全门槛见 `docs/tencent-cloud-deployment.md`。
 
 默认 `AUTH_EMAIL_MODE=local`，只在本机页面展示演示验证码。可选 `AUTH_EMAIL_MODE=smtp` 需要在**后端进程环境**设置 `SPRING_MAIL_HOST`、`SPRING_MAIL_PORT`、`SPRING_MAIL_USERNAME`、`SPRING_MAIL_PASSWORD` 与 `AUTH_MAIL_FROM`；使用 STARTTLS 的 587 端口为默认示例。此模式不会把验证码返回前端；邮件发送失败返回 503。SMTP 已通过伪造发送器的接口测试，尚未真实投递。不要提交邮件口令或把当前版本直接部署到公网。
 
@@ -98,5 +98,7 @@ cd backend
 ## 参赛材料
 
 `docs/demo.md` 记录演示路径、技术结构、资料来源与已知限制。[8 页技术文档](output/pdf/xike-technical-report.pdf) 已生成，源文件为 `docs/technical-report.html`；[提交状态](docs/submission-status.md) 记录已完成项及待联调项。当前未部署，真实模型与邮件投递尚未完成。
+
+评审可按 [五分钟体验指南](docs/reviewer-guide.md) 本机启动和复核。Linux/macOS 使用 `npm` 与 `bash ./mvnw`；Windows PowerShell 使用 `npm.cmd` 与 `.\mvnw.cmd`。
 
 参赛者：汪善知；学校：广州南方学院；团队：暴力炸。指导教师信息未提供。

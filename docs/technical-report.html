@@ -148,7 +148,8 @@
     <h3>复现命令</h3>
     <div class="card"><code>cd frontend &amp;&amp; npm.cmd ci &amp;&amp; npm.cmd run format:check &amp;&amp; npm.cmd run lint &amp;&amp; npm.cmd run build</code><br><code>cd backend &amp;&amp; .\mvnw.cmd verify</code><br><span class="small">Windows PowerShell 使用 npm.cmd；无需修改执行策略。</span></div>
     <h3>腾讯云部署准备</h3>
-    <p>目标为 Nginx 提供前端静态文件并代理同源 <code>/api</code>，Spring Boot 仅监听回环地址；外部只开放 HTTPS。实例类型、系统、公网地址和域名尚待从用户的腾讯云控制台确认。当前未发布公网实例。</p>
+    <p>用户截图确认了中国香港三区的 Lighthouse 实例（2 核、2GB、40GB SSD），公网 IPv4 已分配。目标为服务器入口提供前端静态文件并代理同源 <code>/api</code>，Spring Boot 仅监听回环地址；操作系统、域名和登录方式待确认。当前未发布公网实例。</p>
+    <p class="small">已生成本机上传包 <code>output/release/xike-runtime.zip</code>，内含 JAR、前端静态文件与部署示例；生成包不等于已部署。</p>
     <p class="note">现有邮箱账号和 H2 文件库只适合本机 Demo。公开部署前必须完成真实邮件投递、滥用限制、跨站请求防护、敏感数据保护、备份恢复、来源及健康文案审核，以及真实模型与费用联调。</p>
     <div class="footer"><span>息刻 · 技术文档</span><span>06 / 08</span></div>
   </section>
@@ -177,7 +178,7 @@
     <p class="lead">息刻已经有可运行的前后端、持久化演示数据、独立助手、来源展示、账号演示和自动化测试。当前应以“健康素养演示系统”向评审说明能力，不能将实验适配器称为已上线的真实大模型。</p>
     <h3>下一阶段</h3>
     <ol>
-      <li>在腾讯云控制台确认服务器与 TokenHub 服务；由用户在自己的控制台开通并保管密钥，后端环境注入，完成真实请求、用量与故障回退联调。</li>
+      <li>确认 Lighthouse 操作系统与 TokenHub 服务；由用户在自己的控制台开通并保管密钥，后端环境注入，完成真实请求、用量与故障回退联调。</li>
       <li>审核 7 条人工摘要与原文的逐项对应；如进入公开使用，补齐专业审校、正式邮箱验证、账号和数据安全。</li>
       <li>以参赛者账号在比赛后台核对实际提交入口、截止时间及文件格式；上传公开仓库或提供评审权限，并录制完整演示。</li>
     </ol>

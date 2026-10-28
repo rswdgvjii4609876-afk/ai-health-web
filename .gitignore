@@ -12,6 +12,7 @@
 **/node_modules/
 frontend/dist/
 frontend/coverage/
+output/release/
 
 # Backend output and local databases
 backend/target/

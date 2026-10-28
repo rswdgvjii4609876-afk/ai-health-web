@@ -1,0 +1,21 @@
+[Unit]
+Description=Xike health literacy demo
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=xike
+Group=xike
+WorkingDirectory=/var/lib/xike
+EnvironmentFile=/etc/xike/xike.env
+ExecStart=/usr/bin/java -Xms128m -Xmx512m -jar /opt/xike/app.jar
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/xike
+
+[Install]
+WantedBy=multi-user.target

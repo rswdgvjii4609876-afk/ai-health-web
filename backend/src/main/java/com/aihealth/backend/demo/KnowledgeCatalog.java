@@ -21,7 +21,7 @@ public class KnowledgeCatalog {
 			new KnowledgeItem("sleep", "规律作息与睡眠", "睡眠", "规律安排工作、学习和休息，留意睡眠环境与睡前习惯。",
 					"国家卫生健康委员会", "2025-03", "睡眠健康核心信息·第4条", "https://www.nhc.gov.cn/guihuaxxs/c100133/202503/70d5836afe804a858b899ee951a24a13.shtml",
 					"今晚为休息预留一段固定时间"),
-			new KnowledgeItem("activity", "把活动放回日常", "活动", "科学健身贵在坚持，也可以从减少连续久坐、增加日常活动开始。",
+			new KnowledgeItem("activity", "把活动放回日常", "活动", "科学健身贵在坚持；健康成年人每周宜安排有氧运动，并配合抗阻训练。",
 					"国家卫生健康委员会", "2024-05", "健康素养66条·第32条", HEALTH_LITERACY_URL,
 					"在日程里安排一次轻松活动"),
 			new KnowledgeItem("mood", "留意心理感受", "心理", "重视心理健康；当压力或情绪问题持续影响生活时，主动寻求支持。",

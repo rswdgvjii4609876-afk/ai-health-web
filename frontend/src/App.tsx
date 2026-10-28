@@ -53,6 +53,9 @@ const VIEWS: View[] = [
   "assistant",
   "account",
 ];
+const REMOTE_BROWSER = !["localhost", "127.0.0.1"].includes(
+  window.location.hostname,
+);
 
 function recentDays(today: string, count: number): string[] {
   const [year, month, day] = today.split("-").map(Number);
@@ -548,7 +551,13 @@ export default function App() {
             <button
               type="button"
               className="account-link"
-              onClick={() => navigate("account")}
+              onClick={() => {
+                if (REMOTE_BROWSER && emailMode === "local") {
+                  setNotice("邮箱账号仅在本机演示；请使用匿名工作区体验");
+                  return;
+                }
+                navigate("account");
+              }}
               title={account ? "我的账号" : "邮箱登录或注册"}
               aria-label={account ? "我的账号" : "邮箱登录或注册"}
             >
@@ -589,6 +598,10 @@ export default function App() {
         )}
         {!accountReady ? (
           <div className="page-wrap loading-state">正在检查演示账号…</div>
+        ) : view === "account" && REMOTE_BROWSER && emailMode === "local" ? (
+          <div className="page-wrap loading-state">
+            邮箱账号仅在本机演示；请使用匿名工作区体验。
+          </div>
         ) : view === "account" || (account && !account.profileComplete) ? (
           <AccountView
             account={account}

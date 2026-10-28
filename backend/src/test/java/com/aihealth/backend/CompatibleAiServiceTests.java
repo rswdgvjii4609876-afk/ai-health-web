@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.aihealth.backend.ai.AiRequest;
 import com.aihealth.backend.ai.CompatibleAiService;
@@ -65,6 +66,7 @@ class CompatibleAiServiceTests {
 		assertThat(response.sources()).extracting("id").containsExactly("sleep");
 		assertThat(response.recordObservation()).isNotBlank();
 		assertThat(requestBody.get()).contains("规律作息与睡眠", "最近 1 天记录");
+		assertThat(requestBody.get()).contains("\"max_tokens\":384");
 		assertThat(authorization.get()).isEqualTo("Bearer test-key");
 		assertThat(response.content()).contains("[S1]");
 		assertThat(response.trace().method()).contains("模型生成");
@@ -96,5 +98,15 @@ class CompatibleAiServiceTests {
 				.isInstanceOf(IllegalArgumentException.class);
 		assertThatThrownBy(() -> new CompatibleAiService(mock, "https://example.com/chat", "", "test-key"))
 				.isInstanceOf(IllegalArgumentException.class);
+	}
+
+	@Test
+	void dailyProviderBudgetFallsBackWithoutSendingAnotherRequest() {
+		var service = service();
+		ReflectionTestUtils.setField(service, "dailyCallLimit", 1);
+		var question = new AiRequest(Persona.STUDENT, "睡眠怎么安排？", null, List.of());
+		assertThat(service.generate(question).mock()).isFalse();
+		assertThat(service.generate(question).mock()).isTrue();
+		assertThat(calls.get()).isEqualTo(1);
 	}
 }

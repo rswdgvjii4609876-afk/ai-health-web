@@ -2,6 +2,8 @@ package com.aihealth.backend.ai;
 
 import java.net.URI;
 import java.time.Duration;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -36,6 +38,10 @@ public class CompatibleAiService implements AiService {
 	private final URI chatUrl;
 	private final String model;
 	private final String apiKey;
+	private LocalDate budgetDay = LocalDate.now(ZoneOffset.UTC);
+	private int callsToday;
+	@Value("${AI_DAILY_CALL_LIMIT:100}")
+	private int dailyCallLimit = 100;
 
 	public CompatibleAiService(MockAiService fallback, @Value("${AI_CHAT_URL:}") String chatUrl,
 			@Value("${AI_MODEL:}") String model, @Value("${AI_API_KEY:}") String apiKey) {
@@ -62,6 +68,7 @@ public class CompatibleAiService implements AiService {
 				.anyMatch(source -> List.of("emergency", "medicine").contains(source.id()))) {
 			return grounded;
 		}
+		if (!reserveCall()) return grounded;
 		String evidence = IntStream.range(0, grounded.sources().size())
 				.mapToObj(index -> {
 					var source = grounded.sources().get(index);
@@ -71,7 +78,7 @@ public class CompatibleAiService implements AiService {
 				.reduce((first, next) -> first + "\n" + next).orElse("");
 		String userPrompt = "问题：" + request.question() + "\n参考摘要：\n" + evidence
 				+ (grounded.recordObservation() == null ? "" : "\n用户授权的演示记录汇总：" + grounded.recordObservation());
-		Map<String, Object> body = Map.of("model", model, "messages", List.of(
+		Map<String, Object> body = Map.of("model", model, "max_tokens", 384, "messages", List.of(
 				Map.of("role", "system", "content", SYSTEM_PROMPT),
 				Map.of("role", "user", "content", userPrompt)));
 		try {
@@ -104,6 +111,17 @@ public class CompatibleAiService implements AiService {
 			found = true;
 		}
 		return found;
+	}
+
+	private synchronized boolean reserveCall() {
+		LocalDate today = LocalDate.now(ZoneOffset.UTC);
+		if (!today.equals(budgetDay)) {
+			budgetDay = today;
+			callsToday = 0;
+		}
+		if (dailyCallLimit <= 0 || callsToday >= dailyCallLimit) return false;
+		callsToday++;
+		return true;
 	}
 
 	private boolean allowedEndpoint(URI uri) {

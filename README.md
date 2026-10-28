@@ -87,6 +87,8 @@ cd backend
 
 默认 `AI_PROVIDER=mock`，无需模型密钥。若已有兼容 Chat Completions 的服务，可在**后端进程环境**设置 `AI_PROVIDER=compatible`、`AI_CHAT_URL`（完整 HTTPS 接口地址）、`AI_MODEL` 和 `AI_API_KEY`。此适配器只把匹配到的人工摘要和问题发给模型；若用户主动勾选记录授权，还会发送该话题相关的演示记录汇总。紧急、药物及无资料的问题仍由 Mock 规则处理，模型不可用时回退 Mock。模型输出尚无逐句事实核验，属于实验功能，不能视为医疗建议或经过验证的 RAG。`.env.example` 仅是变量清单，不会自动加载。前端不接触密钥；不要将 API Key、口令或真实健康数据提交 Git。
 
+模型请求最多要求 384 个输出 token，`AI_DAILY_CALL_LIMIT` 默认限制每个后端进程每 UTC 日尝试 100 次；设为 `0` 可禁止付费请求并回退 Mock。此计数在进程重启后重置，不能代替腾讯云控制台的预算与用量控制。
+
 计划使用腾讯云服务器承载最终作品；**模型供应商尚未确定**。现有兼容适配器可以实验性连接符合 Chat Completions 格式的服务。若后续选择腾讯云 TokenHub，可参考其官方 [API 使用说明](https://cloud.tencent.com/document/product/1823/130078) 和 [语言模型列表](https://cloud.tencent.com/document/product/1823/130079)，按实际开通地域配置接口地址与模型。当前没有真实密钥或服务联调。模型回复必须包含本次资料编号 `[S1]` 等才会展示；这仅验证编号，不验证每句话的医学事实。腾讯云服务器的准备与公开访问前的安全门槛见 `docs/tencent-cloud-deployment.md`。
 
 默认 `AUTH_EMAIL_MODE=local`，只在本机页面展示演示验证码。可选 `AUTH_EMAIL_MODE=smtp` 需要在**后端进程环境**设置 `SPRING_MAIL_HOST`、`SPRING_MAIL_PORT`、`SPRING_MAIL_USERNAME`、`SPRING_MAIL_PASSWORD` 与 `AUTH_MAIL_FROM`；使用 STARTTLS 的 587 端口为默认示例。此模式不会把验证码返回前端；邮件发送失败返回 503。SMTP 已通过伪造发送器的接口测试，尚未真实投递。不要提交邮件口令或把当前版本直接部署到公网。
@@ -95,6 +97,6 @@ cd backend
 
 ## 参赛材料
 
-`docs/demo.md` 记录演示路径、技术结构、资料来源与已知限制。提交前仍需补充团队信息、测试与部署证据，以及不超过 30 页的技术 PDF；当前未部署。
+`docs/demo.md` 记录演示路径、技术结构、资料来源与已知限制。[8 页技术文档](output/pdf/xike-technical-report.pdf) 已生成，源文件为 `docs/technical-report.html`；[提交状态](docs/submission-status.md) 记录已完成项及待联调项。当前未部署，真实模型与邮件投递尚未完成。
 
-团队成员、学校、指导教师：待填写。
+参赛者：汪善知；学校：广州南方学院；团队：暴力炸。指导教师信息未提供。

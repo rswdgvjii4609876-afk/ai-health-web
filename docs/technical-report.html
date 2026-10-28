@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <title>息刻 · AI 原生健康素养应用技术文档</title>
+  <style>
+    @page { size: A4; margin: 14mm 16mm; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; color: #1b2836; font-family: "Microsoft YaHei", "Noto Sans CJK SC", sans-serif; font-size: 10.5pt; line-height: 1.62; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    .page { height: 269mm; position: relative; break-after: page; overflow: hidden; }
+    .page:last-child { break-after: auto; }
+    .eyebrow { color: #357a81; letter-spacing: .22em; font-size: 8pt; font-weight: 700; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { font-size: 31pt; letter-spacing: -.03em; line-height: 1.23; margin-bottom: 9mm; }
+    h2 { font-size: 18pt; line-height: 1.3; margin: 3mm 0 5mm; color: #143d46; }
+    h3 { font-size: 11pt; color: #143d46; margin: 5mm 0 2mm; }
+    p { margin-bottom: 3mm; }
+    ul, ol { padding-left: 1.5em; margin: 2mm 0 4mm; }
+    li { margin-bottom: 2mm; }
+    a { color: #147f8b; text-decoration: none; overflow-wrap: anywhere; }
+    strong { color: #143d46; }
+    .rule { width: 17mm; height: 1.5mm; background: #e7a967; margin: 7mm 0; }
+    .lead { font-size: 13pt; line-height: 1.68; color: #344858; }
+    .tag { display: inline-block; background: #e9f5f2; color: #1b666e; border-radius: 99px; padding: 1.4mm 3mm; margin-right: 2mm; font-size: 8.5pt; }
+    .card { border-radius: 4mm; padding: 4mm 5mm; background: #f2f7f6; margin: 3mm 0; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; }
+    .grid3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 3mm; }
+    .metric { border: 1px solid #dae8e5; border-radius: 3mm; padding: 3mm; }
+    .metric b { display: block; font-size: 17pt; color: #147f8b; line-height: 1.3; }
+    .flow { display: flex; align-items: stretch; gap: 2mm; margin: 5mm 0; }
+    .flow div { flex: 1; background: #e9f5f2; padding: 3mm; border-radius: 2mm; text-align: center; font-size: 9pt; }
+    .flow i { align-self: center; font-style: normal; color: #a47d51; }
+    table { border-collapse: collapse; width: 100%; margin: 3mm 0 5mm; font-size: 9.2pt; }
+    th { background: #dcece9; color: #143d46; text-align: left; }
+    th, td { padding: 2mm 2.3mm; border-bottom: 1px solid #d9e3e2; vertical-align: top; }
+    code { font-family: Consolas, monospace; font-size: 9pt; color: #315a68; }
+    .note { border-left: 1.2mm solid #e7a967; padding-left: 3mm; color: #4d5e67; }
+    .footer { position: absolute; bottom: 0; width: 100%; border-top: 1px solid #dce7e6; padding-top: 2mm; color: #7b8a8e; font-size: 7.5pt; display: flex; justify-content: space-between; }
+    .cover { background: linear-gradient(142deg,#103b45 0%,#174b53 65%,#2e6e70 100%); color: white; padding: 15mm; margin: 0; height: 269mm; }
+    .cover h1 { color: white; margin-top: 41mm; font-size: 45pt; }
+    .cover .lead { color: #d3e8e7; max-width: 140mm; }
+    .cover .eyebrow { color: #9de0d2; }
+    .cover .rule { width: 28mm; }
+    .cover-meta { position: absolute; bottom: 22mm; display: grid; grid-template-columns: 1fr 1fr; width: 145mm; gap: 4mm; color: #e1eeeb; }
+    .cover-meta span { color: #9dd4d0; font-size: 8pt; display: block; }
+    .cover-footer { position: absolute; bottom: 11mm; font-size: 8pt; color: #bbd9d6; }
+    .small { font-size: 8.5pt; }
+  </style>
+</head>
+<body>
+  <section class="page cover">
+    <div class="eyebrow">XIKE / EVIDENCE FIRST HEALTH LITERACY</div>
+    <h1>息刻</h1>
+    <div class="rule"></div>
+    <p class="lead">从一条健康疑问出发，走过记录、求证、行动与回顾。面向大学生、职场人士及年长者的 AI 原生健康素养 Web 应用。</p>
+    <p style="margin-top: 12mm">技术文档 · 参赛提交版</p>
+    <div class="cover-meta">
+      <div><span>参赛者</span>汪善知</div><div><span>学校</span>广州南方学院</div>
+      <div><span>团队</span>暴力炸</div><div><span>版本日期</span>2026 年 10 月 28 日</div>
+    </div>
+    <div class="cover-footer">健康素养工具 / 非诊断或治疗服务</div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">01 / 项目概述与需求分析</div><h2>让健康信息有来处，让日常变化看得见</h2>
+    <p class="lead">用户遇到“熬夜后如何安排睡眠”“久坐如何开始活动”之类问题时，常在碎片信息、个人记录和实际行动之间反复跳转。息刻把这三个环节接到同一个工作台。</p>
+    <div class="grid3">
+      <div class="card"><strong>大学生</strong><br>作息易波动，偏好快速提问与小目标。</div>
+      <div class="card"><strong>职场人士</strong><br>关注久坐、压力及可执行的日程调整。</div>
+      <div class="card"><strong>年长者</strong><br>重视清晰阅读、信息来源与日常安全。</div>
+    </div>
+    <h3>需求到功能的映射</h3>
+    <table><tr><th>真实任务</th><th>交互设计</th><th>边界</th></tr>
+      <tr><td>保存近一个月状态</td><td>最近 30 天任意日期编辑；7/30 天回顾</td><td>缺失日留空，不生成疾病风险分数</td></tr>
+      <tr><td>求证健康说法</td><td>助手展示摘要、命中词、原文定位与链接</td><td>主题相关不等于证明问题中的每项说法</td></tr>
+      <tr><td>把信息转为行动</td><td>保存可执行小行动，标记完成</td><td>不替代专业诊疗</td></tr>
+      <tr><td>找回往日问题</td><td>保存、检索与删除历史提问</td><td>默认只显示最近 100 条</td></tr></table>
+    <p class="note">四种演示画像均为虚构内容。当前正式邮件验证、生产级鉴权与医疗服务不在作品能力声明内。</p>
+    <figure style="margin: 4mm auto 0; width: 130mm;"><img src="images/desktop-home.png" alt="息刻首页桌面演示" style="width: 100%; border: 1px solid #dce7e6; border-radius: 2mm;"><figcaption class="small" style="text-align:center;color:#667c81;">图 1 · 首页记录与提问入口（Mock 演示）</figcaption></figure>
+    <div class="footer"><span>息刻 · 技术文档</span><span>02 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">02 / 系统架构设计</div><h2>前后端分离，同源 API，敏感配置留在服务端</h2>
+    <div class="flow"><div>React + TypeScript<br>组件与交互</div><i>→</i><div>Axios /api<br>同源请求</div><i>→</i><div>Spring Boot<br>REST 与规则</div><i>→</i><div>H2 文件库<br>工作区数据</div></div>
+    <div class="grid">
+      <div class="card"><strong>前端工程</strong><br>Vite 构建；Tailwind CSS 和自定义样式承载响应式视觉；ECharts 呈现时间趋势；按页面状态组织账户、记录、知识、行动与助手。</div>
+      <div class="card"><strong>后端工程</strong><br>控制器校验输入；Repository 用 JDBC 保存记录、行动、提问和账户；AiService 接口选择 Mock 或兼容 Chat Completions 的模型适配器。</div>
+      <div class="card"><strong>工作区</strong><br>匿名浏览器通过 HttpOnly Cookie 隔离；邮箱演示账号有独立工作区。账户健康分类只参与知识卡片排序，不自动进入模型请求。</div>
+      <div class="card"><strong>运行配置</strong><br>Java 21 / Spring Boot 4.1.2 / Maven Wrapper；Node.js / npm；数据库、模型、SMTP 参数通过后端进程环境配置，密钥不入 Git。</div>
+    </div>
+    <h3>主要数据对象</h3>
+    <table><tr><th>对象</th><th>用途</th></tr>
+      <tr><td>checkin</td><td>日期、睡眠、活动、心情与简短备注；仅最近 30 天可编辑</td></tr>
+      <tr><td>saved_question</td><td>问题、回答、来源与证据路径，按工作区隔离</td></tr>
+      <tr><td>action_item</td><td>用户选定的小行动与完成状态</td></tr>
+      <tr><td>account_profile / account_session</td><td>邮箱演示身份、画像和摘要会话令牌</td></tr></table>
+    <p class="note">开发阶段使用 H2 本地文件；切换 MySQL 仍需驱动、schema 和备份恢复验证。</p>
+    <div class="footer"><span>息刻 · 技术文档</span><span>03 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">03 / AI 技术方案</div><h2>先检索可追溯摘要，再决定是否让模型生成</h2>
+    <div class="flow"><div>问题与画像</div><i>→</i><div>规则分流</div><i>→</i><div>人工摘要检索</div><i>→</i><div>模型 / Mock</div><i>→</i><div>引用与边界</div></div>
+    <ol>
+      <li><strong>资料层：</strong>7 条人工整理的国家卫生健康委员会资料卡片记录标题、机构、年月、原文定位、链接、摘要和小行动。</li>
+      <li><strong>检索层：</strong>按主题词匹配与简易得分选取最多两条。检索痕迹显示命中词和匹配范围；无命中时拒绝生成事实性结论。</li>
+      <li><strong>安全分流：</strong>胸痛、呼吸困难等紧急情形直接提示线下求助；用药问题转向医生或药师；这两类不调用模型。</li>
+      <li><strong>生成层：</strong>默认 Mock 可离线复现。可选兼容模型适配器只发送问题与本次命中摘要；用户主动授权时追加相关的七日记录汇总。输出须含本次资料的合法编号，否则回退 Mock。</li>
+      <li><strong>成本约束：</strong>单次请求限制输出 token；后端进程按 UTC 日限制模型尝试次数，默认 100 次，可设为 0 禁用。重启会重置该计数，正式预算仍应在供应商侧设置。</li>
+    </ol>
+    <div class="card"><strong>为什么这样选型</strong><br>通过统一 AiService 保持无密钥演示可运行，并为真实模型留出替换点；来源卡片让回答可追溯；分流和回退避免把无资料问题伪装成确定答案。</div>
+    <p class="note">当前不是向量 RAG，也未完成真实模型联调。合法引用编号只能验证“引用来自本次资料”，不能自动证明每一句医学事实。正式接入时需在后端设置 <code>AI_PROVIDER</code>、<code>AI_CHAT_URL</code>、<code>AI_MODEL</code>、<code>AI_API_KEY</code>。</p>
+    <figure style="margin: 5mm auto 0; width: 120mm;"><img src="images/assistant-evidence.png" alt="助手显示回答与证据路径" style="width: 100%; border: 1px solid #dce7e6; border-radius: 2mm;"><figcaption class="small" style="text-align:center;color:#667c81;">图 2 · 助手回答、原始出处与检索路径（Mock 演示）</figcaption></figure>
+    <div class="footer"><span>息刻 · 技术文档</span><span>04 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">04 / 核心功能实现</div><h2>一次可回放的“记录 - 求证 - 行动 - 回顾”闭环</h2>
+    <div class="grid">
+      <div class="card"><strong>01 记录</strong><br>睡眠、活动、心情和备注由用户填写；最近 30 天可补记。缺失日期不按零参与平均，图表标注记录覆盖率。</div>
+      <div class="card"><strong>02 求证</strong><br>从首页场景问题进入独立助手；查看来源、原文定位、命中词和回答边界。继续追问时只在有限条件下沿用上轮主题。</div>
+      <div class="card"><strong>03 行动</strong><br>把资料中的小行动加入列表，允许完成和移除。系统不自动下达治疗方案。</div>
+      <div class="card"><strong>04 回顾</strong><br>7/30 天趋势、覆盖率与原始记录；月度提示由清楚的规则挑选资料，不做疾病预测。</div>
+    </div>
+    <h3>账号与隐私交互</h3>
+    <p>邮箱注册/登录共用验证码。默认本机模式在页面显示演示码；它不发送邮件，也不证明邮箱归属。账号首次登录选择年龄段和身份；宽泛健康分类可跳过，保存时需要单独同意。退出、删除问题、清除工作区及删除账号均有对应数据路径。</p>
+    <h3>演示路径</h3>
+    <ol>
+      <li>切换大学生与职场人士画像，进入记录页补记一日睡眠和活动。</li>
+      <li>在助手中询问“熬夜后怎么安排睡眠”，打开来源，查看本次匹配依据。</li>
+      <li>询问资料范围外的问题，观察拒答；再测试用药边界。</li>
+      <li>保存一个小行动并完成，回到月度回顾查看覆盖率与趋势。</li>
+      <li>使用虚构邮箱演示本机账号和首次资料填写，观察独立空白工作区。</li>
+    </ol>
+    <div class="footer"><span>息刻 · 技术文档</span><span>05 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">05 / 测试与部署</div><h2>已验证的工程质量，以及明确的上线门槛</h2>
+    <div class="grid3">
+      <div class="metric"><b>29</b>项后端测试<br>0 失败</div>
+      <div class="metric"><b>PASS</b>前端格式 / Lint / 构建</div>
+      <div class="metric"><b>H2</b>本地持久化<br>重启验证</div>
+    </div>
+    <h3>测试覆盖</h3>
+    <p>数据库启动、画像隔离、7/30 天回顾、记录编辑、历史提问、行动管理、输入校验、账号数据删除、可选 SMTP 的伪造发送器、模型适配器与无效引用回退、每日模型调用上限。桌面与 390px 窄屏已做本机浏览器流程检查。</p>
+    <h3>复现命令</h3>
+    <div class="card"><code>cd frontend &amp;&amp; npm.cmd ci &amp;&amp; npm.cmd run format:check &amp;&amp; npm.cmd run lint &amp;&amp; npm.cmd run build</code><br><code>cd backend &amp;&amp; .\mvnw.cmd verify</code><br><span class="small">Windows PowerShell 使用 npm.cmd；无需修改执行策略。</span></div>
+    <h3>腾讯云部署准备</h3>
+    <p>目标为 Nginx 提供前端静态文件并代理同源 <code>/api</code>，Spring Boot 仅监听回环地址；外部只开放 HTTPS。实例类型、系统、公网地址和域名尚待从用户的腾讯云控制台确认。当前未发布公网实例。</p>
+    <p class="note">现有邮箱账号和 H2 文件库只适合本机 Demo。公开部署前必须完成真实邮件投递、滥用限制、跨站请求防护、敏感数据保护、备份恢复、来源及健康文案审核，以及真实模型与费用联调。</p>
+    <div class="footer"><span>息刻 · 技术文档</span><span>06 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">06 / 创新点与评估</div><h2>创新集中在可解释的交互路径与谨慎的生成边界</h2>
+    <div class="grid">
+      <div class="card"><strong>应用创新 · 证据工作台</strong><br>将日常记录、健康求证、小行动和月度回顾组织成一条可回放路径，避免问答结束后信息消失。</div>
+      <div class="card"><strong>交互创新 · 可见的依据</strong><br>回答旁展示机构、日期、原文定位与匹配词；无匹配时明确说明资料不足。</div>
+      <div class="card"><strong>技术创新 · 分层 AI 适配</strong><br>规则先处理高风险与资料空白问题；统一服务接口切换 Mock / 真实模型，模型输出需合法引用并可回退。</div>
+      <div class="card"><strong>隐私设计 · 主动授权</strong><br>健康分类不自动送模型；七日记录汇总须由用户主动勾选；支持清除和删除。</div>
+    </div>
+    <h3>固定问题评测设计</h3>
+    <p>测试集覆盖睡眠、活动、情绪、健康信息、药物、急症及资料外问题。观察是否检索到预期资料、是否拒答或转介、是否产生合法引用，以及异常时是否回退。当前为本地规则与模拟提供商评测；真实模型的逐句事实核验与临床专家评审尚未完成。</p>
+    <h3>后续可量化指标</h3>
+    <table><tr><th>指标</th><th>评估方法</th></tr>
+      <tr><td>资料路径正确率</td><td>专家核对回答与原文定位的对应关系</td></tr>
+      <tr><td>任务完成率</td><td>观察不同年龄用户能否完成记录、求证、行动</td></tr>
+      <tr><td>安全边界</td><td>药物、急症、证据不足问题的拒答与转介率</td></tr>
+      <tr><td>费用与延迟</td><td>真实模型调用后记录供应商用量和响应时间</td></tr></table>
+    <div class="footer"><span>息刻 · 技术文档</span><span>07 / 08</span></div>
+  </section>
+
+  <section class="page">
+    <div class="eyebrow">07 / 总结、展望与资料来源</div><h2>已形成可运行作品，真实服务联调仍需完成</h2>
+    <p class="lead">息刻已经有可运行的前后端、持久化演示数据、独立助手、来源展示、账号演示和自动化测试。当前应以“健康素养演示系统”向评审说明能力，不能将实验适配器称为已上线的真实大模型。</p>
+    <h3>下一阶段</h3>
+    <ol>
+      <li>在腾讯云控制台确认服务器与 TokenHub 服务；由用户在自己的控制台开通并保管密钥，后端环境注入，完成真实请求、用量与故障回退联调。</li>
+      <li>审核 7 条人工摘要与原文的逐项对应；如进入公开使用，补齐专业审校、正式邮箱验证、账号和数据安全。</li>
+      <li>以参赛者账号在比赛后台核对实际提交入口、截止时间及文件格式；上传公开仓库或提供评审权限，并录制完整演示。</li>
+    </ol>
+    <h3>主要资料</h3>
+    <p class="small">[1] 国家卫生健康委员会，《中国公民健康素养——基本知识与技能（2024 年版）》：<a href="https://www.nhc.gov.cn/xcs/c100123/202405/73a4927142f34152abed875634a3c13b.shtml">nhc.gov.cn / 2024 健康素养</a></p>
+    <p class="small">[2] 国家卫生健康委员会，《睡眠健康核心信息及释义》：<a href="https://www.nhc.gov.cn/guihuaxxs/c100133/202503/70d5836afe804a858b899ee951a24a13.shtml">nhc.gov.cn / 睡眠健康</a></p>
+    <p class="small">[3] 国家卫生健康委员会，《老年失能预防核心信息》：<a href="https://www.nhc.gov.cn/lljks/c100158/201908/434ad204c8cd4972bb4c9eb42f748f43.shtml">nhc.gov.cn / 老年失能预防</a></p>
+    <p class="small">[4] 腾讯云，《TokenHub API 使用说明》：<a href="https://cloud.tencent.com/document/product/1823/130078">cloud.tencent.com / TokenHub API</a></p>
+    <p class="small">[5] 腾讯云，《OpenAI Chat Completions 兼容接口》：<a href="https://cloud.tencent.com/document/product/1823/135872">cloud.tencent.com / 接口字段</a></p>
+    <p class="note">文档依据本仓库代码与 2026-10-28 本机构建结果编写。团队：暴力炸；参赛者：汪善知；学校：广州南方学院。指导教师信息未提供。具体参赛规则以比赛后台为准。</p>
+    <div class="footer"><span>息刻 · 技术文档</span><span>08 / 08</span></div>
+  </section>
+</body>
+</html>

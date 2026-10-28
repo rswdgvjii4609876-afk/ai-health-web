@@ -81,12 +81,16 @@ export const api = {
     useRecords: boolean,
   ) =>
     (
-      await client.post<AiResponse>("/assistant", {
-        persona,
-        question,
-        contextTopicId,
-        useRecords,
-      })
+      await client.post<AiResponse>(
+        "/assistant",
+        {
+          persona,
+          question,
+          contextTopicId,
+          useRecords,
+        },
+        { timeout: 20000 },
+      )
     ).data,
   questions: async (persona: Persona) =>
     (await client.get<SavedQuestion[]>("/questions", { params: { persona } }))

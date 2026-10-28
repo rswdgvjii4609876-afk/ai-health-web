@@ -14,6 +14,16 @@ export const PEOPLE: Record<
       "久坐学习怎么增加活动？",
     ],
   },
+  LEARNER: {
+    label: "学生",
+    short: "学习节律",
+    intro: "把学习、活动与休息，安排在适合自己的节奏里。",
+    prompts: [
+      "学习时怎样安排休息？",
+      "怎样减少久坐时间？",
+      "压力影响生活时可以求助谁？",
+    ],
+  },
   WORKER: {
     label: "职场人士",
     short: "工作节律",
@@ -36,9 +46,12 @@ export const PEOPLE: Record<
   },
 };
 
-export const NAV: { id: Exclude<View, "checkin">; label: string }[] = [
+export const NAV: {
+  id: Exclude<View, "checkin" | "account">;
+  label: string;
+}[] = [
   { id: "today", label: "今天" },
-  { id: "review", label: "七日回顾" },
+  { id: "review", label: "健康回顾" },
   { id: "knowledge", label: "知识库" },
   { id: "assistant", label: "AI 助手" },
 ];

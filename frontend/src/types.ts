@@ -1,6 +1,26 @@
-export type Persona = "STUDENT" | "WORKER" | "SENIOR";
+export type Persona = "STUDENT" | "LEARNER" | "WORKER" | "SENIOR";
 
-export type View = "today" | "checkin" | "review" | "knowledge" | "assistant";
+export type View =
+  "today" | "checkin" | "review" | "knowledge" | "assistant" | "account";
+
+export type AgeBand = "AGE_18_24" | "AGE_25_44" | "AGE_45_59" | "AGE_60_PLUS";
+export type HealthTag = "SLEEP" | "MOBILITY" | "CARDIOVASCULAR" | "METABOLIC";
+
+export interface AccountInfo {
+  email: string;
+  ageBand: AgeBand | null;
+  persona: Persona | null;
+  healthTags: HealthTag[];
+  profileComplete: boolean;
+  demoVerification: boolean;
+}
+
+export interface ProfileInput {
+  ageBand: AgeBand;
+  persona: Persona;
+  healthTags: HealthTag[];
+  sensitiveConsent: boolean;
+}
 
 export interface Checkin {
   day: string;
@@ -30,6 +50,7 @@ export interface KnowledgeItem {
   summary: string;
   sourceName: string;
   sourceDate: string;
+  sourceLocator?: string;
   sourceUrl: string;
   action: string | null;
 }
@@ -39,9 +60,20 @@ export interface Dashboard {
   currentDay: string;
   today: Checkin | null;
   history: Checkin[];
+  monthHistory: Checkin[];
   actions: ActionItem[];
   knowledge: KnowledgeItem[];
   review: WeeklyReview;
+  monthReview: MonthlyReview;
+}
+
+export interface MonthlyReview {
+  daysRecorded: number;
+  averageSleepHours: number;
+  averageActivityMinutes: number;
+  averageMood: number;
+  observation: string;
+  focusIds: string[];
 }
 
 export interface WeeklyReview {
@@ -61,10 +93,24 @@ export interface AiResponse {
   followUps: string[];
   usedTodayRecord: boolean;
   mock: boolean;
+  recordObservation: string | null;
+  trace?: {
+    status: "RELATED" | "NOT_FOUND" | "URGENT" | "CLINICAL";
+    method: string;
+    matchedTerms: string[];
+    explanation: string;
+  } | null;
 }
 
 export interface ChatMessage {
   role: "user" | "assistant";
   text: string;
   response?: AiResponse;
+}
+
+export interface SavedQuestion {
+  id: string;
+  askedAt: string;
+  question: string;
+  response: AiResponse;
 }

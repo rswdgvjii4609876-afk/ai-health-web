@@ -3,6 +3,7 @@ package com.aihealth.backend;
 import com.aihealth.backend.ai.AiRequest;
 import com.aihealth.backend.ai.AiService;
 import com.aihealth.backend.demo.DemoModels.Persona;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,7 +22,7 @@ class AiHealthBackendApplicationTests {
 	@Test
 	void contextLoads() {
 		assertThat(jdbcTemplate.queryForObject("SELECT 1", Integer.class)).isEqualTo(1);
-		assertThat(aiService.generate(new AiRequest(Persona.STUDENT, "睡眠", null)).mock()).isTrue();
+		assertThat(aiService.generate(new AiRequest(Persona.STUDENT, "睡眠", null, List.of())).mock()).isTrue();
 	}
 
 }

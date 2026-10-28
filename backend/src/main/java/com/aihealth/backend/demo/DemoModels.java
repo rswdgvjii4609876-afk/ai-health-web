@@ -8,7 +8,7 @@ public final class DemoModels {
 	}
 
 	public enum Persona {
-		STUDENT, WORKER, SENIOR
+		STUDENT, LEARNER, WORKER, SENIOR
 	}
 
 	public record Checkin(LocalDate day, double sleepHours, int activityMinutes, int mood, String note) {
@@ -27,17 +27,22 @@ public final class DemoModels {
 	}
 
 	public record KnowledgeItem(String id, String title, String category, String summary,
-			String sourceName, String sourceDate, String sourceUrl, String action) {
+			String sourceName, String sourceDate, String sourceLocator, String sourceUrl, String action) {
 	}
 
 	public record Dashboard(Persona persona, LocalDate currentDay, Checkin today, List<Checkin> history,
-			List<ActionItem> actions, List<KnowledgeItem> knowledge, WeeklyReview review) {
+			List<Checkin> monthHistory, List<ActionItem> actions, List<KnowledgeItem> knowledge,
+			WeeklyReview review, MonthlyReview monthReview) {
 	}
 
 	public record WeeklyReview(int daysRecorded, double averageSleepHours, int averageActivityMinutes,
 			double sleepChangeHours, int activityChangeMinutes, String focusId, String observation) {
 	}
 
-	public record AskInput(Persona persona, String question) {
+	public record MonthlyReview(int daysRecorded, double averageSleepHours, int averageActivityMinutes,
+			double averageMood, String observation, List<String> focusIds) {
+	}
+
+	public record AskInput(Persona persona, String question, String contextTopicId, Boolean useRecords) {
 	}
 }

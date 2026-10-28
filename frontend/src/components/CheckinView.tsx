@@ -65,7 +65,7 @@ export default function CheckinView({
         </h1>
       </header>
       <label className="day-picker">
-        记录日期
+        记录日期 · 可补记近 30 天
         <select
           aria-label="选择记录日期"
           value={selectedDay}
@@ -202,7 +202,9 @@ export default function CheckinView({
           />
         </label>
         <footer className="checkin-footer">
-          <p>不要填写真实病历或身份信息。演示数据在后端重启后清空。</p>
+          <p>
+            请勿填写真实病历或身份信息。演示记录保存在本地后端，可从页脚清除。
+          </p>
           <button className="button-dark" type="submit" disabled={busy}>
             <Check size={20} />
             {busy ? "保存中…" : "保存记录"}

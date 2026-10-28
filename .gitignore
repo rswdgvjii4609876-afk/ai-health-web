@@ -15,6 +15,7 @@ frontend/coverage/
 
 # Backend output and local databases
 backend/target/
+backend/aihealth-data*
 *.mv.db
 *.trace.db
 

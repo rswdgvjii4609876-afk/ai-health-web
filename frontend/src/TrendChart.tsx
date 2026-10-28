@@ -18,9 +18,13 @@ const METRICS = {
 export default function TrendChart({
   history,
   metric,
+  periodDays,
+  endDay,
 }: {
   history: Checkin[];
   metric: Metric;
+  periodDays: number;
+  endDay: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -28,6 +32,18 @@ export default function TrendChart({
     if (!ref.current) return;
     const chart = echarts.init(ref.current);
     const config = METRICS[metric];
+    const [year, month, day] = endDay.split("-").map(Number);
+    const last = new Date(year, month - 1, day);
+    const dates = Array.from({ length: periodDays }, (_, index) => {
+      const date = new Date(last);
+      date.setDate(date.getDate() - periodDays + index + 1);
+      return [date.getFullYear(), date.getMonth() + 1, date.getDate()]
+        .map((part, position) =>
+          position === 0 ? String(part) : String(part).padStart(2, "0"),
+        )
+        .join("-");
+    });
+    const records = new Map(history.map((item) => [item.day, item]));
     chart.setOption({
       animationDuration: 450,
       grid: { left: 44, right: 18, top: 24, bottom: 40 },
@@ -41,10 +57,14 @@ export default function TrendChart({
       xAxis: {
         type: "category",
         boundaryGap: false,
-        data: history.map((item) => item.day.slice(5).replace("-", "/")),
+        data: dates.map((date) => date.slice(5).replace("-", "/")),
         axisLine: { lineStyle: { color: "#cbd6d0" } },
         axisTick: { show: false },
-        axisLabel: { color: "#53675b", fontSize: 14 },
+        axisLabel: {
+          color: "#53675b",
+          fontSize: 14,
+          interval: periodDays === 30 ? 4 : 0,
+        },
       },
       yAxis: {
         type: "value",
@@ -57,13 +77,16 @@ export default function TrendChart({
         {
           name: config.name,
           type: "line",
-          data: history.map((item) =>
-            metric === "sleep"
+          data: dates.map((date) => {
+            const item = records.get(date);
+            if (!item) return null;
+            return metric === "sleep"
               ? item.sleepHours
               : metric === "activity"
                 ? item.activityMinutes
-                : item.mood,
-          ),
+                : item.mood;
+          }),
+          connectNulls: false,
           smooth: true,
           symbolSize: 8,
           itemStyle: { color: config.color },
@@ -78,14 +101,14 @@ export default function TrendChart({
       observer.disconnect();
       chart.dispose();
     };
-  }, [history, metric]);
+  }, [history, metric, periodDays, endDay]);
 
   return (
     <div
       ref={ref}
       className="trend-chart"
       role="img"
-      aria-label={`近七日${METRICS[metric].name}趋势图`}
+      aria-label={`近${periodDays}日${METRICS[metric].name}趋势图，未记录日期留空`}
     />
   );
 }

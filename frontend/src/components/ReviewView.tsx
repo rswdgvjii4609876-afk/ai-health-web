@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from "react";
-import { ArrowRight, Download, Info } from "lucide-react";
+import { ArrowRight, Check, Download, Info, Plus } from "lucide-react";
 import type { Metric } from "../TrendChart";
 import type { Dashboard, Persona, View } from "../types";
 import { MOODS, PEOPLE } from "./config";
@@ -17,23 +17,35 @@ export default function ReviewView({
   persona,
   onNavigate,
   onEditDay,
+  onAddAction,
+  busy,
 }: {
   dashboard: Dashboard;
   persona: Persona;
   onNavigate: (view: View) => void;
   onEditDay: (day: string) => void;
+  onAddAction: (title: string) => void;
+  busy: boolean;
 }) {
   const [metric, setMetric] = useState<Metric>("sleep");
+  const [period, setPeriod] = useState<"week" | "month">("week");
+  const monthly = period === "month";
+  const history = monthly ? dashboard.monthHistory : dashboard.history;
+  const review = monthly ? dashboard.monthReview : dashboard.review;
   const focus = dashboard.knowledge.find(
     (item) => item.id === dashboard.review.focusId,
   );
+  const monthFocus = dashboard.monthReview.focusIds
+    .map((id) => dashboard.knowledge.find((item) => item.id === id))
+    .filter((item) => item !== undefined);
 
   function exportRecords() {
     const exportData = {
       persona,
       exportedAt: new Date().toISOString(),
       demo: true,
-      history: dashboard.history,
+      periodDays: monthly ? 30 : 7,
+      history,
     };
     const url = URL.createObjectURL(
       new Blob([JSON.stringify(exportData, null, 2)], {
@@ -42,7 +54,7 @@ export default function ReviewView({
     );
     const link = document.createElement("a");
     link.href = url;
-    link.download = `xike-demo-${persona.toLowerCase()}.json`;
+    link.download = `xike-demo-${persona.toLowerCase()}-${monthly ? "30d" : "7d"}.json`;
     link.click();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
@@ -53,7 +65,7 @@ export default function ReviewView({
         <span className="kicker">REVIEW / {PEOPLE[persona].short}</span>
         <div className="page-header-row">
           <h1>
-            把这一周，
+            把日常，
             <br />
             <em>看得更清楚。</em>
           </h1>
@@ -63,39 +75,71 @@ export default function ReviewView({
             onClick={exportRecords}
           >
             <Download size={19} />
-            导出示例记录
+            导出当前记录
           </button>
         </div>
-        <p>七日回顾只呈现你填下的事实，不给健康打分。</p>
+        <p>从一周到一个月，只呈现你填下的事实，不给健康打分。</p>
       </header>
-      <div className="review-figures">
+      <div className="review-period" role="group" aria-label="选择回顾时段">
+        <div className="segmented">
+          <button
+            type="button"
+            className={!monthly ? "selected" : ""}
+            aria-pressed={!monthly}
+            onClick={() => setPeriod("week")}
+          >
+            近 7 天
+          </button>
+          <button
+            type="button"
+            className={monthly ? "selected" : ""}
+            aria-pressed={monthly}
+            onClick={() => setPeriod("month")}
+          >
+            近 30 天
+          </button>
+        </div>
+        <span>
+          已记录 {review.daysRecorded} / {monthly ? 30 : 7} 天
+        </span>
+      </div>
+      <div className={`review-figures ${monthly ? "monthly" : ""}`}>
         <div>
           <span>记录天数</span>
           <strong>
-            {dashboard.review.daysRecorded}
+            {review.daysRecorded}
             <small>天</small>
           </strong>
         </div>
         <div>
           <span>日均睡眠</span>
           <strong>
-            {dashboard.review.averageSleepHours}
+            {review.daysRecorded ? review.averageSleepHours : "—"}
             <small>小时</small>
           </strong>
         </div>
         <div>
           <span>日均活动</span>
           <strong>
-            {dashboard.review.averageActivityMinutes}
+            {review.daysRecorded ? review.averageActivityMinutes : "—"}
             <small>分钟</small>
           </strong>
         </div>
+        {monthly && (
+          <div>
+            <span>平均心情</span>
+            <strong>
+              {review.daysRecorded ? dashboard.monthReview.averageMood : "—"}
+              <small>/ 5</small>
+            </strong>
+          </div>
+        )}
       </div>
       <section className="section-block review-chart-section">
         <div className="section-heading">
           <div>
             <span className="kicker">01 / 轨迹</span>
-            <h2>数据会说话，结论要谨慎。</h2>
+            <h2>{monthly ? "三十天的生活节律" : "数据会说话，结论要谨慎。"}</h2>
           </div>
           <div className="segmented" aria-label="选择趋势指标">
             {(["sleep", "activity", "mood"] as Metric[]).map((item) => (
@@ -113,47 +157,113 @@ export default function ReviewView({
         </div>
         <div className="review-chart-surface">
           <Suspense fallback={<div className="trend-chart" />}>
-            <TrendChart history={dashboard.history} metric={metric} />
+            <TrendChart
+              history={history}
+              metric={metric}
+              periodDays={monthly ? 30 : 7}
+              endDay={dashboard.currentDay}
+            />
           </Suspense>
         </div>
         <div className="review-chart-footer">
           <Info size={18} />
-          <p>{dashboard.review.observation}</p>
+          <p>{review.observation}</p>
         </div>
       </section>
-      <section className="section-block review-context">
-        <div className="section-heading">
-          <div>
-            <span className="kicker">02 / 下一步</span>
-            <h2>从观察走向行动</h2>
+      {monthly ? (
+        <section className="section-block monthly-guidance">
+          <div className="section-heading">
+            <div>
+              <span className="kicker">02 / 生活方式参考</span>
+              <h2>有依据的小调整</h2>
+            </div>
           </div>
-        </div>
-        <div className="context-grid">
-          <div>
-            <span className="context-label">资料焦点</span>
-            <h3>{focus?.title ?? "选择一个关注点"}</h3>
-            <p>{focus?.summary ?? "记录更多日常信息后再回看。"}</p>
-            {focus && (
-              <SourceLink
-                name={focus.sourceName}
-                date={focus.sourceDate}
-                url={focus.sourceUrl}
-              />
-            )}
+          <p className="guidance-intro">
+            依据自填记录选择阅读方向；记录不等于医学评估，活动时长也不代表运动强度。
+          </p>
+          <div className="guidance-list">
+            {monthFocus.map((item, index) => (
+              <article key={item.id}>
+                <span className="guidance-number">
+                  0{index + 1} / {item.category}
+                </span>
+                <div>
+                  <h3>{item.title}</h3>
+                  <p>{item.summary}</p>
+                  <SourceLink
+                    name={item.sourceName}
+                    date={item.sourceDate}
+                    url={item.sourceUrl}
+                  />
+                </div>
+                {item.action && (
+                  <button
+                    type="button"
+                    className="guidance-action"
+                    disabled={
+                      busy ||
+                      dashboard.actions.some(
+                        (action) => action.title === item.action,
+                      )
+                    }
+                    onClick={() => onAddAction(item.action!)}
+                  >
+                    {dashboard.actions.some(
+                      (action) => action.title === item.action,
+                    ) ? (
+                      <Check size={18} />
+                    ) : (
+                      <Plus size={18} />
+                    )}
+                    {dashboard.actions.some(
+                      (action) => action.title === item.action,
+                    )
+                      ? "已加入行动"
+                      : "加入行动"}
+                  </button>
+                )}
+              </article>
+            ))}
           </div>
-          <button
-            type="button"
-            className="button-dark"
-            onClick={() => onNavigate("checkin")}
-          >
-            更新今天的记录
-            <ArrowRight size={18} />
-          </button>
-        </div>
-      </section>
+          <p className="guidance-disclaimer">
+            如症状持续、影响生活或需要诊疗与用药判断，请咨询专业人员。资料内容请以原文为准。
+          </p>
+        </section>
+      ) : (
+        <section className="section-block review-context">
+          <div className="section-heading">
+            <div>
+              <span className="kicker">02 / 下一步</span>
+              <h2>从观察走向行动</h2>
+            </div>
+          </div>
+          <div className="context-grid">
+            <div>
+              <span className="context-label">资料焦点</span>
+              <h3>{focus?.title ?? "选择一个关注点"}</h3>
+              <p>{focus?.summary ?? "记录更多日常信息后再回看。"}</p>
+              {focus && (
+                <SourceLink
+                  name={focus.sourceName}
+                  date={focus.sourceDate}
+                  url={focus.sourceUrl}
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              className="button-dark"
+              onClick={() => onNavigate("checkin")}
+            >
+              更新今天的记录
+              <ArrowRight size={18} />
+            </button>
+          </div>
+        </section>
+      )}
       <details className="record-details">
         <summary>
-          查看每日原始记录 <span>{dashboard.history.length} 条</span>
+          查看每日原始记录 <span>{history.length} 条</span>
         </summary>
         <div className="table-scroll">
           <table className="history-table">
@@ -168,7 +278,7 @@ export default function ReviewView({
               </tr>
             </thead>
             <tbody>
-              {dashboard.history.map((item) => (
+              {history.map((item) => (
                 <tr key={item.day}>
                   <td>{item.day}</td>
                   <td>{item.sleepHours} 小时</td>

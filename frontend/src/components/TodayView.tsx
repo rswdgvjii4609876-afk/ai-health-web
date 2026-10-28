@@ -2,11 +2,13 @@ import { lazy, Suspense, useState } from "react";
 import type { FormEvent } from "react";
 import {
   ArrowRight,
+  BookOpen,
   Check,
   Clock3,
   MessageCircle,
   Plus,
   Send,
+  ShieldCheck,
   Trash2,
 } from "lucide-react";
 import type { ActionItem, Dashboard, Persona, View } from "../types";
@@ -18,6 +20,7 @@ const TrendChart = lazy(() => import("../TrendChart"));
 interface Props {
   dashboard: Dashboard;
   persona: Persona;
+  accountMode: boolean;
   busy: boolean;
   onNavigate: (view: View) => void;
   onAsk: (question: string) => void;
@@ -29,6 +32,7 @@ interface Props {
 export default function TodayView({
   dashboard,
   persona,
+  accountMode,
   busy,
   onNavigate,
   onAsk,
@@ -77,13 +81,16 @@ export default function TodayView({
           </div>
           <div className="today-band-grid">
             <div className="today-title-block">
-              <p className="kicker light-kicker">你的日常，正在形成线索</p>
+              <p className="kicker light-kicker">你的健康素养工作台</p>
               <h1>
-                今天，
+                先看清问题，
                 <br />
-                <em>照看自己的节律。</em>
+                <em>再改变一点。</em>
               </h1>
-              <p className="lead-copy">{PEOPLE[persona].intro}</p>
+              <p className="lead-copy">
+                {PEOPLE[persona].intro}{" "}
+                用记录发现线索，用原始资料核对说法，再把答案变成一件能完成的小事。
+              </p>
               <button
                 className="button-accent"
                 type="button"
@@ -97,7 +104,7 @@ export default function TodayView({
             <div className="today-readout" aria-label="今日记录快照">
               <div className="readout-top">
                 <span>今日快照</span>
-                <span>01 / 03</span>
+                <span>{dashboard.today ? "已记录" : "待记录"}</span>
               </div>
               <div className="readout-item">
                 <span>睡眠</span>
@@ -126,7 +133,7 @@ export default function TodayView({
             <div className="quick-ask-label">
               <MessageCircle size={22} />
               <span>
-                有个问题？<b>直接问息刻</b>
+                想求证？<b>问息刻</b>
               </span>
             </div>
             <input
@@ -145,6 +152,51 @@ export default function TodayView({
               <Send size={20} />
             </button>
           </form>
+          <div className="quick-prompts" aria-label="常见问题">
+            {PEOPLE[persona].prompts.map((prompt) => (
+              <button key={prompt} type="button" onClick={() => onAsk(prompt)}>
+                {prompt}
+                <ArrowRight size={16} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="journey-section layout-max" aria-label="使用流程">
+        <div className="journey-heading">
+          <span className="kicker">YOUR PATH / 三步开始</span>
+          <strong>问题有依据，改变有回声。</strong>
+        </div>
+        <div className="journey-grid">
+          <button type="button" onClick={() => onNavigate("checkin")}>
+            <span className="journey-index">01 / 记录</span>
+            <BookOpen size={27} />
+            <strong>留下今天的线索</strong>
+            <small>
+              {dashboard.today
+                ? "今天已记录，可以继续编辑"
+                : "睡眠、活动与心情，三项就够"}
+            </small>
+            <ArrowRight size={19} className="journey-arrow" />
+          </button>
+          <button type="button" onClick={() => onNavigate("assistant")}>
+            <span className="journey-index">02 / 求证</span>
+            <ShieldCheck size={27} />
+            <strong>看见回答的来处</strong>
+            <small>提出疑问，核对资料与适用范围</small>
+            <ArrowRight size={19} className="journey-arrow" />
+          </button>
+          <button type="button" onClick={() => onNavigate("review")}>
+            <span className="journey-index">03 / 回顾</span>
+            <Check size={27} />
+            <strong>让小行动持续发生</strong>
+            <small>
+              {completed}/{dashboard.actions.length} 件小行动已完成 ·{" "}
+              {dashboard.review.daysRecorded} 天有记录
+            </small>
+            <ArrowRight size={19} className="journey-arrow" />
+          </button>
         </div>
       </section>
 
@@ -153,11 +205,7 @@ export default function TodayView({
           <div className="section-heading">
             <div>
               <span className="kicker">01 / 变化</span>
-              <h2>
-                七天的记录，
-                <br />
-                比一天更有故事。
-              </h2>
+              <h2>近七天，发生了什么？</h2>
             </div>
             <button
               className="text-button"
@@ -173,12 +221,19 @@ export default function TodayView({
               <div className="chart-heading">
                 <span>睡眠节律</span>
                 <strong>
-                  {dashboard.review.averageSleepHours}
+                  {dashboard.review.daysRecorded
+                    ? dashboard.review.averageSleepHours
+                    : "—"}
                   <small>小时 / 日均</small>
                 </strong>
               </div>
               <Suspense fallback={<div className="trend-chart" />}>
-                <TrendChart history={dashboard.history} metric="sleep" />
+                <TrendChart
+                  history={dashboard.history}
+                  metric="sleep"
+                  periodDays={7}
+                  endDay={dashboard.currentDay}
+                />
               </Suspense>
             </div>
             <div className="review-observation">
@@ -257,7 +312,7 @@ export default function TodayView({
           <div className="section-heading">
             <div>
               <span className="kicker">03 / 行动</span>
-              <h2>真正做过的，才属于今天。</h2>
+              <h2>今天的小行动</h2>
             </div>
             <span className="completion-count">
               {completed} / {dashboard.actions.length} 已完成
@@ -335,7 +390,9 @@ export default function TodayView({
         </section>
         <p className="page-disclaimer">
           <Clock3 size={16} />
-          示例画像与内存数据仅供体验；不用于诊断，后端重启后恢复初始数据。
+          {accountMode
+            ? "账号记录仅保存在本机演示数据库；可从页脚清除，不用于诊断。"
+            : "示例画像仅供体验；记录按浏览器隔离，可从页脚清除，不用于诊断。"}
         </p>
       </div>
     </div>

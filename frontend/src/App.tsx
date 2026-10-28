@@ -8,10 +8,13 @@ import {
   HeartPulse,
   MessageCircle,
   RefreshCw,
+  Trash2,
   Type,
+  UserRound,
   X,
 } from "lucide-react";
 import { api, apiError } from "./api";
+import AccountView from "./components/AccountView";
 import AssistantView from "./components/AssistantView";
 import CheckinView from "./components/CheckinView";
 import KnowledgeView from "./components/KnowledgeView";
@@ -20,10 +23,12 @@ import TodayView from "./components/TodayView";
 import { NAV, PEOPLE } from "./components/config";
 import type {
   ActionItem,
+  AccountInfo,
   ChatMessage,
   CheckinInput,
   Dashboard,
   Persona,
+  SavedQuestion,
   View,
 } from "./types";
 
@@ -40,7 +45,28 @@ const ICONS = {
   assistant: MessageCircle,
 };
 
-const VIEWS: View[] = ["today", "checkin", "review", "knowledge", "assistant"];
+const VIEWS: View[] = [
+  "today",
+  "checkin",
+  "review",
+  "knowledge",
+  "assistant",
+  "account",
+];
+
+function recentDays(today: string, count: number): string[] {
+  const [year, month, day] = today.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+  return Array.from({ length: count }, (_, index) => {
+    const value = new Date(date);
+    value.setDate(value.getDate() - index);
+    return [value.getFullYear(), value.getMonth() + 1, value.getDate()]
+      .map((part, position) =>
+        position === 0 ? String(part) : String(part).padStart(2, "0"),
+      )
+      .join("-");
+  });
+}
 
 function initialView(): View {
   const requested = window.location.hash.slice(1) as View;
@@ -49,17 +75,28 @@ function initialView(): View {
 
 function initialPersona(): Persona {
   const value = localStorage.getItem("xike-persona");
-  return value === "WORKER" || value === "SENIOR" ? value : "STUDENT";
+  return value === "WORKER" || value === "SENIOR" || value === "LEARNER"
+    ? value
+    : "STUDENT";
 }
 
 export default function App() {
   const [persona, setPersona] = useState<Persona>(initialPersona);
+  const [account, setAccount] = useState<AccountInfo | null>(null);
+  const [accountReady, setAccountReady] = useState(false);
+  const [accountEpoch, setAccountEpoch] = useState(0);
   const [view, setView] = useState<View>(initialView);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [form, setForm] = useState<CheckinInput>(EMPTY_FORM);
   const [selectedDay, setSelectedDay] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [savedQuestions, setSavedQuestions] = useState<SavedQuestion[]>([]);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [questionsError, setQuestionsError] = useState("");
   const [question, setQuestion] = useState("");
+  const [useRecords, setUseRecords] = useState(false);
+  const [aiMode, setAiMode] = useState("mock");
+  const [emailMode, setEmailMode] = useState<"local" | "smtp">("local");
   const [largeText, setLargeText] = useState(
     () => localStorage.getItem("xike-large-text") === "true",
   );
@@ -67,7 +104,9 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [confirmReset, setConfirmReset] = useState(false);
   const requestId = useRef(0);
+  const questionsRequestId = useRef(0);
 
   const load = useCallback(async (selected: Persona) => {
     const currentRequest = ++requestId.current;
@@ -95,10 +134,70 @@ export default function App() {
     }
   }, []);
 
+  const loadQuestions = useCallback(async (selected: Persona) => {
+    const currentRequest = ++questionsRequestId.current;
+    setQuestionsLoading(true);
+    setQuestionsError("");
+    try {
+      const items = await api.questions(selected);
+      if (currentRequest === questionsRequestId.current)
+        setSavedQuestions(items);
+    } catch (cause) {
+      if (currentRequest === questionsRequestId.current)
+        setQuestionsError(apiError(cause));
+    } finally {
+      if (currentRequest === questionsRequestId.current)
+        setQuestionsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
-    const timer = window.setTimeout(() => void load(persona), 0);
-    return () => window.clearTimeout(timer);
-  }, [load, persona]);
+    let active = true;
+    void api
+      .account()
+      .then((info) => {
+        if (!active) return;
+        setAccount(info);
+        if (info?.persona) setPersona(info.persona);
+        if (info && !info.profileComplete) {
+          setView("account");
+          window.location.hash = "account";
+        }
+      })
+      .catch(() => {
+        if (active) setAccount(null);
+      })
+      .finally(() => {
+        if (active) setAccountReady(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!accountReady || (account && !account.profileComplete)) return;
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        await load(persona);
+        if (!cancelled) await loadQuestions(persona);
+      })();
+    }, 0);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [load, loadQuestions, persona, accountReady, account, accountEpoch]);
+  useEffect(() => {
+    void api
+      .health()
+      .then((health) => {
+        setAiMode(health.aiMode);
+        setEmailMode(health.emailMode);
+      })
+      .catch(() => setAiMode("mock"));
+  }, []);
   useEffect(() => {
     localStorage.setItem("xike-persona", persona);
   }, [persona]);
@@ -115,8 +214,24 @@ export default function App() {
     window.addEventListener("hashchange", onHashChange);
     return () => window.removeEventListener("hashchange", onHashChange);
   }, []);
+  useEffect(() => {
+    const onExpired = () => {
+      ++requestId.current;
+      ++questionsRequestId.current;
+      setAccount(null);
+      setDashboard(null);
+      setMessages([]);
+      setSavedQuestions([]);
+      setView("account");
+      window.location.hash = "account";
+      setNotice("登录已过期，请重新验证邮箱");
+    };
+    window.addEventListener("xike-session-expired", onExpired);
+    return () => window.removeEventListener("xike-session-expired", onExpired);
+  }, []);
 
   function navigate(next: View) {
+    if (account && !account.profileComplete && next !== "account") return;
     if (next === "checkin" && dashboard) {
       setSelectedDay(dashboard.currentDay);
       setForm(
@@ -136,7 +251,7 @@ export default function App() {
   }
 
   function editDay(day: string) {
-    const record = dashboard?.history.find((item) => item.day === day);
+    const record = dashboard?.monthHistory.find((item) => item.day === day);
     if (!record) return;
     setSelectedDay(day);
     setForm({
@@ -151,7 +266,7 @@ export default function App() {
   }
 
   function selectDay(day: string) {
-    const record = dashboard?.history.find((item) => item.day === day);
+    const record = dashboard?.monthHistory.find((item) => item.day === day);
     setSelectedDay(day);
     setForm(
       record
@@ -168,12 +283,47 @@ export default function App() {
   function changePersona(next: Persona) {
     if (next === persona) return;
     ++requestId.current;
+    ++questionsRequestId.current;
     setDashboard(null);
     setLoading(true);
     setError("");
     setMessages([]);
+    setSavedQuestions([]);
+    setQuestionsError("");
     setQuestion("");
+    setUseRecords(false);
     setPersona(next);
+  }
+
+  function accountChanged(next: AccountInfo) {
+    ++requestId.current;
+    ++questionsRequestId.current;
+    setAccount(next);
+    setDashboard(null);
+    setMessages([]);
+    setSavedQuestions([]);
+    setUseRecords(false);
+    setLoading(true);
+    if (next.persona) setPersona(next.persona);
+    setAccountEpoch((current) => current + 1);
+    setView(next.profileComplete ? "today" : "account");
+    window.location.hash = next.profileComplete ? "today" : "account";
+  }
+
+  function accountExited(deleted: boolean) {
+    ++requestId.current;
+    ++questionsRequestId.current;
+    setAccount(null);
+    setPersona("STUDENT");
+    setDashboard(null);
+    setMessages([]);
+    setSavedQuestions([]);
+    setUseRecords(false);
+    setLoading(true);
+    setAccountEpoch((current) => current + 1);
+    setNotice(deleted ? "演示账号及记录已删除" : "已退出账号，返回匿名演示");
+    setView("today");
+    window.location.hash = "today";
   }
 
   function retry() {
@@ -255,19 +405,53 @@ export default function App() {
     }
   }
 
+  async function clearWorkspace() {
+    setBusy(true);
+    try {
+      await api.clearWorkspace();
+      ++questionsRequestId.current;
+      setMessages([]);
+      setSavedQuestions([]);
+      setQuestion("");
+      setUseRecords(false);
+      setConfirmReset(false);
+      setDashboard(null);
+      setLoading(true);
+      await load(persona);
+      await loadQuestions(persona);
+      setNotice(
+        account
+          ? "当前账号的演示记录已清除"
+          : "演示数据已清除，已载入新的示例工作区",
+      );
+      navigate("today");
+    } catch (cause) {
+      setNotice(apiError(cause));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function ask(text: string) {
     const clean = text.trim();
     if (!clean || busy) return;
+    const contextTopicId = messages.at(-1)?.response?.sources[0]?.id ?? null;
     if (view !== "assistant") navigate("assistant");
     setMessages((current) => [...current, { role: "user", text: clean }]);
     setQuestion("");
     setBusy(true);
     try {
-      const response = await api.ask(persona, clean);
+      const response = await api.ask(
+        persona,
+        clean,
+        contextTopicId,
+        useRecords,
+      );
       setMessages((current) => [
         ...current,
         { role: "assistant", text: response.content, response },
       ]);
+      await loadQuestions(persona);
     } catch (cause) {
       setMessages((current) => [
         ...current,
@@ -276,6 +460,27 @@ export default function App() {
     } finally {
       setBusy(false);
     }
+  }
+
+  async function deleteSavedQuestion(id: string) {
+    try {
+      await api.deleteQuestion(persona, id);
+      setSavedQuestions((current) => current.filter((item) => item.id !== id));
+      setNotice("历史提问已删除");
+    } catch (cause) {
+      setNotice(apiError(cause));
+    }
+  }
+
+  function openSavedQuestion(item: SavedQuestion) {
+    setMessages([
+      { role: "user", text: item.question },
+      {
+        role: "assistant",
+        text: item.response.content,
+        response: item.response,
+      },
+    ]);
   }
 
   return (
@@ -320,23 +525,42 @@ export default function App() {
               <Type size={20} />
               <span>{largeText ? "A" : "A+"}</span>
             </button>
-            <label className="profile-picker">
-              <span className="profile-dot">
-                {PEOPLE[persona].label.slice(0, 1)}
+            {!account && (
+              <label className="profile-picker">
+                <span className="profile-dot">
+                  {PEOPLE[persona].label.slice(0, 1)}
+                </span>
+                <select
+                  aria-label="切换演示人群"
+                  value={persona}
+                  disabled={busy || loading}
+                  onChange={(event) =>
+                    changePersona(event.target.value as Persona)
+                  }
+                >
+                  <option value="STUDENT">大学生</option>
+                  <option value="LEARNER">学生</option>
+                  <option value="WORKER">职场人士</option>
+                  <option value="SENIOR">年长者</option>
+                </select>
+              </label>
+            )}
+            <button
+              type="button"
+              className="account-link"
+              onClick={() => navigate("account")}
+              title={account ? "我的账号" : "邮箱登录或注册"}
+              aria-label={account ? "我的账号" : "邮箱登录或注册"}
+            >
+              <UserRound size={19} />
+              <span>
+                {account
+                  ? account.profileComplete && account.persona
+                    ? PEOPLE[account.persona].label
+                    : "完成资料"
+                  : "登录 / 注册"}
               </span>
-              <select
-                aria-label="切换演示人群"
-                value={persona}
-                disabled={busy || loading}
-                onChange={(event) =>
-                  changePersona(event.target.value as Persona)
-                }
-              >
-                <option value="STUDENT">大学生</option>
-                <option value="WORKER">职场人士</option>
-                <option value="SENIOR">年长者</option>
-              </select>
-            </label>
+            </button>
           </div>
         </div>
       </header>
@@ -363,7 +587,19 @@ export default function App() {
             </button>
           </div>
         )}
-        {loading && !dashboard ? (
+        {!accountReady ? (
+          <div className="page-wrap loading-state">正在检查演示账号…</div>
+        ) : view === "account" || (account && !account.profileComplete) ? (
+          <AccountView
+            account={account}
+            emailMode={emailMode}
+            onAuthenticated={accountChanged}
+            onProfileSaved={accountChanged}
+            onSignedOut={() => accountExited(false)}
+            onDeleted={() => accountExited(true)}
+            onBack={() => navigate("today")}
+          />
+        ) : loading && !dashboard ? (
           <div className="page-wrap loading-state">正在载入演示画像…</div>
         ) : (
           dashboard && (
@@ -372,6 +608,7 @@ export default function App() {
                 <TodayView
                   dashboard={dashboard}
                   persona={persona}
+                  accountMode={Boolean(account)}
                   busy={busy}
                   onNavigate={navigate}
                   onAsk={(text) => void ask(text)}
@@ -384,12 +621,7 @@ export default function App() {
                 <CheckinView
                   form={form}
                   selectedDay={selectedDay}
-                  availableDays={[
-                    ...new Set([
-                      ...dashboard.history.map((item) => item.day),
-                      dashboard.currentDay,
-                    ]),
-                  ].sort()}
+                  availableDays={recentDays(dashboard.currentDay, 30)}
                   busy={busy}
                   onChange={setForm}
                   onSelectDay={selectDay}
@@ -403,6 +635,8 @@ export default function App() {
                   persona={persona}
                   onNavigate={navigate}
                   onEditDay={editDay}
+                  onAddAction={(title) => void addAction(title)}
+                  busy={busy}
                 />
               )}
               {view === "knowledge" && (
@@ -418,9 +652,15 @@ export default function App() {
                 <AssistantView
                   persona={persona}
                   messages={messages}
+                  savedQuestions={savedQuestions}
+                  questionsLoading={questionsLoading}
+                  questionsError={questionsError}
                   question={question}
                   busy={busy}
                   actions={dashboard.actions}
+                  aiMode={aiMode}
+                  useRecords={useRecords}
+                  onUseRecordsChange={setUseRecords}
                   onQuestionChange={setQuestion}
                   onAsk={(text) => void ask(text)}
                   onAddAction={(title) => void addAction(title)}
@@ -428,6 +668,9 @@ export default function App() {
                     setMessages([]);
                     setQuestion("");
                   }}
+                  onOpenSavedQuestion={openSavedQuestion}
+                  onDeleteSavedQuestion={(id) => void deleteSavedQuestion(id)}
+                  onRetryQuestions={() => void loadQuestions(persona)}
                 />
               )}
             </>
@@ -437,7 +680,32 @@ export default function App() {
       <footer className="site-footer">
         <div className="layout-max">
           <span>息刻 XIKE · 健康素养 Demo</span>
-          <span>示例数据 / Mock 助手 / 非医疗服务</span>
+          <div className="footer-reset">
+            {confirmReset ? (
+              <div role="group" aria-label="确认清除演示数据">
+                <span>清除当前浏览器的演示数据？</span>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => void clearWorkspace()}
+                >
+                  确认清除
+                </button>
+                <button type="button" onClick={() => setConfirmReset(false)}>
+                  取消
+                </button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setConfirmReset(true)}>
+                <Trash2 size={16} aria-hidden="true" />
+                清除演示数据
+              </button>
+            )}
+          </div>
+          <span>
+            示例数据 / {aiMode === "compatible" ? "模型实验模式" : "Mock 助手"}{" "}
+            / 非医疗服务
+          </span>
         </div>
       </footer>
       <nav className="mobile-nav" aria-label="移动端主导航">

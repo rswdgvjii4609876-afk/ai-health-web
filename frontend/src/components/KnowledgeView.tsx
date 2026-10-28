@@ -85,6 +85,11 @@ export default function KnowledgeView({
               <BookOpen size={26} strokeWidth={1.7} aria-hidden="true" />
               <h2>{item.title}</h2>
               <p>{item.summary}</p>
+              {item.sourceLocator && (
+                <span className="knowledge-locator">
+                  原文位置：{item.sourceLocator}
+                </span>
+              )}
               <SourceLink
                 name={item.sourceName}
                 date={item.sourceDate}
